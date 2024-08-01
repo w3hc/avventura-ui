@@ -1,8 +1,8 @@
 # Avventura UI
 
-UI of Avventura.
+Text-based Web3 RPG.
 
-API: https://github.com/strat-web3/avventura
+Live demo: [https://avventura.fun](https://avventura.fun)
 
 ## Install
 
