@@ -20,9 +20,9 @@ const sepolia = {
 }
 
 const metadata = {
-  name: 'Genji',
-  description: 'Next.js + Web3 Modal + Ethers.js + Chakra UI',
-  url: 'https://genji.netlify.app',
+  name: 'Avventura',
+  description: 'Avvetura UI',
+  url: 'https://avventura.netlify.app',
   icons: ['./favicon.ico'],
 }
 
