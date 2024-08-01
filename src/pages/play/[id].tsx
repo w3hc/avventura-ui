@@ -1,9 +1,10 @@
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useState, useEffect, useCallback } from 'react'
 import { Text, Button, useToast, Box, VStack, Flex } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
 import { LinkComponent } from '../../components/layout/LinkComponent'
-import { useState, useEffect } from 'react'
+import Image from 'next/image'
+import styled from '@emotion/styled'
 
 interface Props {
   href: string
@@ -20,6 +21,40 @@ interface StoryCard {
   paths: number[]
 }
 
+const TypingText = styled.div`
+  white-space: pre-wrap;
+  overflow: hidden;
+  border-right: 0px solid;
+`
+
+interface TypingEffectProps {
+  text: string
+  speed?: number
+  onComplete: () => void
+}
+
+const TypingEffect: React.FC<TypingEffectProps> = ({ text, speed = 10, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState('')
+
+  useEffect(() => {
+    setDisplayedText('') // Reset text when input changes
+    let i = 0
+    const typingInterval = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(text.slice(0, i + 1))
+        i++
+      } else {
+        clearInterval(typingInterval)
+        onComplete()
+      }
+    }, speed)
+
+    return () => clearInterval(typingInterval)
+  }, [text, speed, onComplete])
+
+  return <TypingText>{displayedText}</TypingText>
+}
+
 export default function Play() {
   const router = useRouter()
   const toast = useToast()
@@ -27,6 +62,7 @@ export default function Play() {
   const [currentStep, setCurrentStep] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [story, setStory] = useState<StoryCard | null>(null)
+  const [showOptions, setShowOptions] = useState<boolean>(false)
 
   const fetchInitialStep = async () => {
     try {
@@ -54,6 +90,7 @@ export default function Play() {
 
   const fetchCard = async (step: number) => {
     setIsLoading(true)
+    setShowOptions(false)
     try {
       const response = await fetch(`/api/fetchCard?id=${step}`)
       if (!response.ok) {
@@ -79,8 +116,8 @@ export default function Play() {
   const nextStep = async (choice: number) => {
     console.log('next step:', choice)
     setIsLoading(true)
+    setShowOptions(false)
     try {
-      // Update the game state
       const updateResponse = await fetch('/api/updateGameStep', {
         method: 'POST',
         headers: {
@@ -93,10 +130,7 @@ export default function Play() {
         throw new Error('Failed to update game state')
       }
 
-      // Update the current step
       setCurrentStep(choice)
-
-      // Fetch the new story card
       await fetchCard(choice)
     } catch (error) {
       console.error('Error advancing to next step:', error)
@@ -107,8 +141,6 @@ export default function Play() {
         duration: 9000,
         isClosable: true,
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -116,8 +148,20 @@ export default function Play() {
     fetchInitialStep()
   }, [])
 
+  const handleTypingComplete = useCallback(() => {
+    console.log('Typing complete, setting timeout for options')
+    setTimeout(() => {
+      console.log('Timeout complete, showing options')
+      setShowOptions(true)
+    }, 500) // DELAY
+  }, [])
+
   if (isLoading) {
-    return <div> </div>
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center">
+        <Image priority width="200" height="200" alt="loader" src="/loader.svg" />
+      </Box>
+    )
   }
 
   if (!story || currentStep === null) {
@@ -127,34 +171,34 @@ export default function Play() {
   return (
     <Flex flexDirection="column" height="100vh" padding={4}>
       <VStack spacing={4} flex={1} width="100%">
-        <Box
-          width="100%"
-          height="100px" // Adjust this value as needed for 5 lines
-          overflowY="auto"
-          marginBottom={4}>
-          <HeadingComponent as="h4">{story.desc}</HeadingComponent>
+        <Box width="100%" maxHeight="180px" overflowY="auto" marginBottom={4} marginTop={10}>
+          <HeadingComponent as="h4">
+            <TypingEffect text={story.desc} onComplete={handleTypingComplete} />
+          </HeadingComponent>
         </Box>
-        <VStack spacing={4} width="100%">
-          {story.options.map((option, index) => (
-            <Box
-              key={index}
-              width="100%"
-              borderRadius="lg"
-              p={4}
-              borderWidth="2px"
-              onClick={() => nextStep(story.paths[index])}
-              cursor="pointer"
-              _hover={{
-                borderColor: '#8c1c84',
-                boxShadow: 'md',
-              }}
-              transition="all 0.2s">
-              <Text fontSize="xl" fontWeight="medium" color={'#45a2f8'} _hover={{ color: '#45a2f8' }}>
-                {option}
-              </Text>
-            </Box>
-          ))}
-        </VStack>
+        {showOptions && (
+          <VStack spacing={4} width="100%">
+            {story.options.map((option, index) => (
+              <Box
+                key={index}
+                width="100%"
+                borderRadius="lg"
+                p={4}
+                borderWidth="2px"
+                onClick={() => nextStep(story.paths[index])}
+                cursor="pointer"
+                _hover={{
+                  borderColor: '#8c1c84',
+                  boxShadow: 'md',
+                }}
+                transition="all 0.2s">
+                <Text fontSize="lg" fontWeight="medium" color={'#45a2f8'} _hover={{ color: '#45a2f8' }}>
+                  {option}
+                </Text>
+              </Box>
+            ))}
+          </VStack>
+        )}
       </VStack>
     </Flex>
   )
