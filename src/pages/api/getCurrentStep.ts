@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   try {
     // Call your Nest.js API to get the current game state
-    const response = await fetch('http://localhost:3000/games/1')
+    const response = await fetch('https://avventura.jcloud-ver-jpe.ik-server.com/games/1')
     if (!response.ok) {
       throw new Error('Failed to fetch game state')
     }
