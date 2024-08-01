@@ -9,6 +9,7 @@ import { HeadingComponent } from '../components/layout/HeadingComponent'
 import { ethers } from 'ethers'
 import { Head } from '../components/layout/Head'
 import { SITE_NAME, SITE_DESCRIPTION } from '../utils/config'
+import { ArrowForwardIcon } from '@chakra-ui/icons'
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -24,11 +25,11 @@ export default function Home() {
     <>
       <Head title={SITE_NAME} description={SITE_DESCRIPTION} />
       <main>
-        {txHash && (
-          <Text py={4} fontSize="14px" color="#45a2f8">
-            <LinkComponent href={txLink ? txLink : ''}>{txHash}</LinkComponent>
-          </Text>
-        )}
+        <LinkComponent href="/play/1">
+          <Button mt={4} colorScheme="green" variant="outline" rightIcon={<ArrowForwardIcon />}>
+            Play
+          </Button>
+        </LinkComponent>
       </main>
     </>
   )
