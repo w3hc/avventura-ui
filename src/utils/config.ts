@@ -1,7 +1,7 @@
 import { ThemingProps } from '@chakra-ui/react'
-export const SITE_DESCRIPTION = 'W3HC Next.js app template'
+export const SITE_DESCRIPTION = 'Text-based Web3 RPG'
 export const SITE_NAME = 'Avventura'
-export const SITE_URL = 'https://avventura.netlify.app'
+export const SITE_URL = 'https://avventura.fun'
 
 export const THEME_INITIAL_COLOR = 'system'
 export const THEME_COLOR_SCHEME: ThemingProps['colorScheme'] = 'blue'
@@ -14,7 +14,7 @@ export const SOCIAL_GITHUB = 'w3hc/avventura-ui'
 
 export const SERVER_SESSION_SETTINGS = {
   cookieName: SITE_NAME,
-  password: process.env.SESSION_PASSWORD ?? 'UPDATE_TO_complex_password_at_least_32_characters_long',
+  password: process.env.SESSION_PASSWORD ?? '',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
   },
