@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { API_BASE_URL } from '../../utils/api'
 
 type StoryCard = {
   step: number
@@ -15,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    const response = await fetch(`https://avventura.jcloud-ver-jpe.ik-server.com/steps/${id}`)
+    const response = await fetch(`${API_BASE_URL}/steps/${id}`)
     if (!response.ok) {
       throw new Error('Failed to fetch story card')
     }
