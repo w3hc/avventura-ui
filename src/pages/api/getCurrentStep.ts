@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { API_BASE_URL } from '../../utils/api'
 
 type CurrentStepResponse = {
   currentStep: number
@@ -11,8 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    // Call your Nest.js API to get the current game state
-    const response = await fetch('https://avventura.jcloud-ver-jpe.ik-server.com/games/1')
+    const response = await fetch(`${API_BASE_URL}/games/1`)
     if (!response.ok) {
       throw new Error('Failed to fetch game state')
     }

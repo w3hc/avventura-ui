@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { API_BASE_URL } from '../../utils/api'
 
 type UpdateResponse = {
   success: boolean
@@ -18,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   console.log('next step:', nextStep)
   try {
-    const response = await fetch('https://avventura.jcloud-ver-jpe.ik-server.com/games/1/next-step', {
+    const response = await fetch(`${API_BASE_URL}/games/1/next-step`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
