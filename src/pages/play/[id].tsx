@@ -63,10 +63,48 @@ export default function Play() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [story, setStory] = useState<StoryCard | null>(null)
   const [showOptions, setShowOptions] = useState<boolean>(false)
+  const [sessionToken, setSessionToken] = useState<string>('defaultSessionToken')
 
-  const fetchInitialStep = async () => {
+  // const login = async () => {
+  //   try {
+  //     setIsLoading(true)
+  //     // trigger Web3 modal
+  //     // setSessionToken
+  //   } catch (error) {
+  //     console.error("Can't login")
+  //     toast({
+  //       title: 'Woops',
+  //       description: "Can't login",
+  //       status: 'error',
+  //       duration: 9000,
+  //       isClosable: true,
+  //     })
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
+
+  const checkTokenSession = async () => {
     try {
-      const response = await fetch('/api/getCurrentStep')
+      setIsLoading(true)
+      // call
+    } catch (error) {
+      console.error('create game')
+      toast({
+        title: 'Woops',
+        description: "Can't start game",
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchInitialStep = async (sessionToken: string) => {
+    try {
+      const response = await fetch(`/api/getCurrentStep?session=${sessionToken}`)
       if (!response.ok) {
         throw new Error('Failed to fetch current step')
       }
@@ -145,7 +183,13 @@ export default function Play() {
   }
 
   useEffect(() => {
-    fetchInitialStep()
+    // TODO: get sessionToken from local storage
+
+    if (sessionToken) {
+      fetchInitialStep(sessionToken)
+    } else {
+      router.push('/')
+    }
   }, [])
 
   const handleTypingComplete = useCallback(() => {
@@ -153,7 +197,7 @@ export default function Play() {
     setTimeout(() => {
       console.log('Timeout complete, showing options')
       setShowOptions(true)
-    }, 500) // DELAY
+    }, 500) // Delay
   }, [])
 
   if (isLoading) {
