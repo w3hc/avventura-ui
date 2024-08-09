@@ -1,36 +1,63 @@
 import * as React from 'react'
-import { Text, Button, useToast } from '@chakra-ui/react'
+import { Button, Input, Text, FormControl, FormLabel, useToast } from '@chakra-ui/react'
 import { useState } from 'react'
-import { BrowserProvider, Contract, Eip1193Provider, parseEther } from 'ethers'
-import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/react'
-import { ERC20_CONTRACT_ADDRESS, ERC20_CONTRACT_ABI } from '../utils/erc20'
-import { LinkComponent } from '../components/layout/LinkComponent'
-import { HeadingComponent } from '../components/layout/HeadingComponent'
-import { ethers } from 'ethers'
-import { Head } from '../components/layout/Head'
-import { SITE_NAME, SITE_DESCRIPTION } from '../utils/config'
-import { ArrowForwardIcon } from '@chakra-ui/icons'
+import { useRouter } from 'next/router'
 
 export default function Home() {
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [txLink, setTxLink] = useState<string>()
-  const [txHash, setTxHash] = useState<string>()
-
-  const { address, chainId, isConnected } = useWeb3ModalAccount()
-  const { walletProvider } = useWeb3ModalProvider()
-  const provider: Eip1193Provider | undefined = walletProvider
+  const [name, setName] = useState('')
   const toast = useToast()
+
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (name.trim()) {
+      try {
+        const response = await fetch('/api/startGame', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userName: name }),
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          toast({
+            title: "C'est parti !",
+            description: `Salut à toi ${name} ! Bonne chance pour cette aventure !`,
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          })
+          router.push('/play/1')
+        } else {
+          throw new Error(data.error || 'Échec du démarrage de la partie')
+        }
+      } catch (error) {
+        console.error('fail to start the game:', error)
+        toast({
+          title: 'Woops',
+          description: 'Mille excuses, nous avons rencontré un souci...',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      }
+    }
+  }
 
   return (
     <>
-      <Head title={SITE_NAME} description={SITE_DESCRIPTION} />
-      <main>
-        <LinkComponent href="/play/1">
-          <Button mt={4} colorScheme="green" variant="outline" rightIcon={<ArrowForwardIcon />}>
-            Play
-          </Button>
-        </LinkComponent>
-      </main>
+      <FormControl as="form" onSubmit={handleSubmit}>
+        <FormLabel>Quel est votre prénom ou pseudo, s&apos;il vous plaît ?</FormLabel>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Francis" />
+        <Button type="submit" colorScheme="blue" mt={5} mb={5}>
+          C&apos;est parti !
+        </Button>
+      </FormControl>
     </>
   )
 }
