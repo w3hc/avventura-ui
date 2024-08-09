@@ -24,10 +24,12 @@ export default function Home() {
 
         const data = await response.json()
 
+        // TODO: store session token in local storage (or cookie ?)
+
         if (data.success) {
           toast({
             title: "C'est parti !",
-            description: `Salut à toi ${name} ! Bonne chance pour cette aventure !`,
+            description: `Salut à toi, ${name} ! Bonne chance pour cette aventure !`,
             status: 'success',
             duration: 5000,
             isClosable: true,
