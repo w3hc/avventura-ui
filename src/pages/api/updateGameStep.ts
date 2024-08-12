@@ -12,14 +12,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   const { nextStep } = req.body
+  const { token, gameId } = req.query
 
   if (!nextStep || typeof nextStep !== 'number') {
     return res.status(400).json({ success: false, error: 'Invalid nextStep' })
   }
 
+  if (!token || Array.isArray(token) || !gameId || Array.isArray(gameId)) {
+    return res.status(400).json({ success: false, error: 'Invalid token or gameId' })
+  }
+
   console.log('next step:', nextStep)
+
   try {
-    const response = await fetch(`${API_BASE_URL}/games/1/next-step`, {
+    // Update the game step
+    const updateResponse = await fetch(`${API_BASE_URL}/games/${gameId}/next-step?token=${token}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,8 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       body: JSON.stringify({ nextStep }),
     })
 
-    if (!response.ok) {
-      throw new Error('Failed to update game state from API route')
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json()
+      throw new Error(errorData.message || 'Failed to update game state')
     }
 
     res.status(200).json({ success: true })

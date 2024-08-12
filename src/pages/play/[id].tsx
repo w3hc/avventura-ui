@@ -33,6 +33,16 @@ interface TypingEffectProps {
   onComplete: () => void
 }
 
+/**
+ *
+ * Main logic
+ *
+ * (1) We check if the user has a valid session token. If not, we redirect them to the homepage.
+ * (2) We fetch the current step (initial step) of the game using the session token.
+ * (3) We fetch the story card for the current step.
+ *
+ */
+
 const TypingEffect: React.FC<TypingEffectProps> = ({ text, speed = 10, onComplete }) => {
   const [displayedText, setDisplayedText] = useState('')
 
@@ -63,7 +73,7 @@ export default function Play() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [story, setStory] = useState<StoryCard | null>(null)
   const [showOptions, setShowOptions] = useState<boolean>(false)
-  const [sessionToken, setSessionToken] = useState<string>('defaultSessionToken')
+  const [sessionToken, setSessionToken] = useState<string>('b9300dade3a2f6beea27e5e91d1feb4634f56f86adc39be13a0ad5cd131a41b1')
 
   // const login = async () => {
   //   try {
@@ -104,7 +114,7 @@ export default function Play() {
 
   const fetchInitialStep = async (sessionToken: string) => {
     try {
-      const response = await fetch(`/api/getCurrentStep?session=${sessionToken}`)
+      const response = await fetch(`/api/getCurrentStep?sessionToken=${sessionToken}`)
       if (!response.ok) {
         throw new Error('Failed to fetch current step')
       }
@@ -116,7 +126,7 @@ export default function Play() {
       console.error('Error fetching initial step:', error)
       toast({
         title: 'Error',
-        description: 'Failed to start the game',
+        description: 'Failed to fetch initial step',
         status: 'error',
         duration: 9000,
         isClosable: true,
@@ -156,7 +166,13 @@ export default function Play() {
     setIsLoading(true)
     setShowOptions(false)
     try {
-      const updateResponse = await fetch('/api/updateGameStep', {
+      const gameId = 1 // You're using a hardcoded game ID
+
+      if (!sessionToken) {
+        throw new Error('No session token found')
+      }
+
+      const updateResponse = await fetch(`/api/updateGameStep?token=${sessionToken}&gameId=${gameId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +181,8 @@ export default function Play() {
       })
 
       if (!updateResponse.ok) {
-        throw new Error('Failed to update game state')
+        const errorData = await updateResponse.json()
+        throw new Error(errorData.error || 'Failed to update game state')
       }
 
       setCurrentStep(choice)
@@ -179,15 +196,23 @@ export default function Play() {
         duration: 9000,
         isClosable: true,
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
     // TODO: get sessionToken from local storage
-
     if (sessionToken) {
       fetchInitialStep(sessionToken)
     } else {
+      toast({
+        title: 'Info',
+        description: "Merci de commencer l'aventure comme il faut.",
+        status: 'info',
+        duration: 9000,
+        isClosable: true,
+      })
       router.push('/')
     }
   }, [])
