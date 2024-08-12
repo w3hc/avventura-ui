@@ -87,12 +87,13 @@ export default function Home() {
       <FormControl as="form" onSubmit={handleSubmit}>
         <FormLabel>Quel est votre prénom ou pseudo, s&apos;il vous plaît ?</FormLabel>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Francis" />
-        <Button type="submit" colorScheme="blue" mt={5} mb={5}>
+        <Button type="submit" colorScheme="green" mt={5} mb={5}>
           C&apos;est parti !
         </Button>
-        <HeadingComponent as="h4">Reprendre votre partie</HeadingComponent>
       </FormControl>
-      <Button onClick={resume} colorScheme="green" mt={5} mb={5}>
+      <br />
+      <HeadingComponent as="h4">Reprendre votre partie</HeadingComponent>
+      <Button onClick={resume} colorScheme="blue" mt={5} mb={5}>
         J&apos;y retourne !
       </Button>
     </>
