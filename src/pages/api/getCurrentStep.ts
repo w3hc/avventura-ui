@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    // First, call the session endpoint to get the session ID
+    // First, get the game ID from session token
     const sessionResponse = await fetch(`${API_BASE_URL}/games/session?token=${sessionToken}`)
 
     console.log('sessionResponse:', sessionResponse)
@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     const sessionId = sessionData.gameId
 
-    // Now use the session ID to fetch the game state
+    // Now use the game ID to fetch the game state
     const gameStateResponse = await fetch(`${API_BASE_URL}/games/${sessionId}`, {
       headers: {
         Authorization: `Bearer ${sessionToken}`,

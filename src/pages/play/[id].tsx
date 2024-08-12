@@ -47,7 +47,7 @@ const TypingEffect: React.FC<TypingEffectProps> = ({ text, speed = 10, onComplet
   const [displayedText, setDisplayedText] = useState('')
 
   useEffect(() => {
-    setDisplayedText('') // Reset text when input changes
+    setDisplayedText('')
     let i = 0
     const typingInterval = setInterval(() => {
       if (i < text.length) {
@@ -73,45 +73,7 @@ export default function Play() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [story, setStory] = useState<StoryCard | null>(null)
   const [showOptions, setShowOptions] = useState<boolean>(false)
-  // const [sessionToken, setSessionToken] = useState<string>('b9300dade3a2f6beea27e5e91d1feb4634f56f86adc39be13a0ad5cd131a41b1')
   const [sessionToken, setSessionToken] = useState<string>('')
-
-  // const login = async () => {
-  //   try {
-  //     setIsLoading(true)
-  //     // trigger Web3 modal
-  //     // setSessionToken
-  //   } catch (error) {
-  //     console.error("Can't login")
-  //     toast({
-  //       title: 'Woops',
-  //       description: "Can't login",
-  //       status: 'error',
-  //       duration: 9000,
-  //       isClosable: true,
-  //     })
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
-  const checkTokenSession = async () => {
-    try {
-      setIsLoading(true)
-      // call
-    } catch (error) {
-      console.error('create game')
-      toast({
-        title: 'Woops',
-        description: "Can't start game",
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const fetchInitialStep = async (sessionToken: string) => {
     try {
@@ -202,14 +164,9 @@ export default function Play() {
   }
 
   useEffect(() => {
-    // TODO: get sessionToken from local storage
-
     console.log('localStorage.getItem:', localStorage.getItem('avventuraSessionToken'))
-
-    // return
     setSessionToken(localStorage.getItem('avventuraSessionToken') || '')
 
-    // console.log('session token in [id]:', sessionToken)
     if (localStorage.getItem('avventuraSessionToken')) {
       fetchInitialStep(localStorage.getItem('avventuraSessionToken') || 'yo')
     } else {

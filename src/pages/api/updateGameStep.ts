@@ -25,7 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   console.log('next step:', nextStep)
 
   try {
-    // Update the game step
     const updateResponse = await fetch(`${API_BASE_URL}/games/${gameId}/next-step?token=${token}`, {
       method: 'POST',
       headers: {
