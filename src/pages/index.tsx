@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Button, Input, Text, FormControl, FormLabel, useToast } from '@chakra-ui/react'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import { HeadingComponent } from '../components/layout/HeadingComponent'
 
 export default function Home() {
   const [name, setName] = useState('')
@@ -30,8 +31,6 @@ export default function Home() {
 
         localStorage.setItem('avventuraSessionToken', data.game.sessions[0])
 
-        // TODO: store session token in local storage (or cookie ?)
-
         if (data.success) {
           toast({
             title: `Salut à toi, ${name} !`,
@@ -57,15 +56,45 @@ export default function Home() {
     }
   }
 
+  const resume = async (e: React.FormEvent) => {
+    // get game ID from session token in local storage
+    console.log('localStorage.getItem:', localStorage.getItem('avventuraSessionToken'))
+
+    if (localStorage.getItem('avventuraSessionToken')) {
+      const response = await fetch(`/api/getGameID?sessionToken=${localStorage.getItem('avventuraSessionToken')}`)
+      const data = await response.json()
+
+      if (data.gameID) {
+        console.log('Game ID:', data.gameID)
+        router.push(`/play/${data.gameID}`)
+      } else {
+        console.error('Game ID not found in response')
+      }
+    } else {
+      toast({
+        title: 'Error',
+        description: 'wooooops',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      })
+    }
+  }
   return (
     <>
+      <HeadingComponent as="h4">Commencer une nouvelle partie</HeadingComponent>
+      <br />
       <FormControl as="form" onSubmit={handleSubmit}>
         <FormLabel>Quel est votre prénom ou pseudo, s&apos;il vous plaît ?</FormLabel>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Francis" />
         <Button type="submit" colorScheme="blue" mt={5} mb={5}>
           C&apos;est parti !
         </Button>
+        <HeadingComponent as="h4">Reprendre votre partie</HeadingComponent>
       </FormControl>
+      <Button onClick={resume} colorScheme="green" mt={5} mb={5}>
+        J&apos;y retourne !
+      </Button>
     </>
   )
 }
