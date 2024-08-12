@@ -73,7 +73,8 @@ export default function Play() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [story, setStory] = useState<StoryCard | null>(null)
   const [showOptions, setShowOptions] = useState<boolean>(false)
-  const [sessionToken, setSessionToken] = useState<string>('b9300dade3a2f6beea27e5e91d1feb4634f56f86adc39be13a0ad5cd131a41b1')
+  // const [sessionToken, setSessionToken] = useState<string>('b9300dade3a2f6beea27e5e91d1feb4634f56f86adc39be13a0ad5cd131a41b1')
+  const [sessionToken, setSessionToken] = useState<string>('')
 
   // const login = async () => {
   //   try {
@@ -166,8 +167,7 @@ export default function Play() {
     setIsLoading(true)
     setShowOptions(false)
     try {
-      const gameId = 1 // You're using a hardcoded game ID
-
+      const gameId = router.query.id
       if (!sessionToken) {
         throw new Error('No session token found')
       }
@@ -203,8 +203,15 @@ export default function Play() {
 
   useEffect(() => {
     // TODO: get sessionToken from local storage
-    if (sessionToken) {
-      fetchInitialStep(sessionToken)
+
+    console.log('localStorage.getItem:', localStorage.getItem('avventuraSessionToken'))
+
+    // return
+    setSessionToken(localStorage.getItem('avventuraSessionToken') || '')
+
+    // console.log('session token in [id]:', sessionToken)
+    if (localStorage.getItem('avventuraSessionToken')) {
+      fetchInitialStep(localStorage.getItem('avventuraSessionToken') || 'yo')
     } else {
       toast({
         title: 'Info',

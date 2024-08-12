@@ -1,6 +1,22 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { API_BASE_URL } from '../../utils/api'
 
+type NestJsApiResponse = {
+  id: number
+  story: string
+  currentStep: number
+  players: {
+    totalNumber: number
+    list: Array<{
+      name: string
+      age: number
+      force: number
+      intelligence: number
+    }>
+  }
+  token: string
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' })
@@ -36,15 +52,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ body }),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
       throw new Error('Failed to start game from API route')
     }
 
-    // TODO: send session token to client
-    res.status(200).json({ success: true })
+    const nestJsApiResponse: NestJsApiResponse = await response.json()
+
+    res.status(200).json({
+      success: true,
+      game: nestJsApiResponse,
+    })
   } catch (error) {
     console.error('Error starting game:', error)
     res.status(500).json({ success: false, error: 'Failed to start game' })

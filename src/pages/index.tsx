@@ -24,6 +24,12 @@ export default function Home() {
 
         const data = await response.json()
 
+        console.log('start game response:', data)
+        console.log('id:', data.game.id)
+        console.log('token:', data.game.sessions[0])
+
+        localStorage.setItem('avventuraSessionToken', data.game.sessions[0])
+
         // TODO: store session token in local storage (or cookie ?)
 
         if (data.success) {
@@ -34,7 +40,7 @@ export default function Home() {
             duration: 5000,
             isClosable: true,
           })
-          router.push('/play/1')
+          router.push(`/play/${data.game.id}`)
         } else {
           throw new Error(data.error || 'Échec du démarrage de la partie')
         }
