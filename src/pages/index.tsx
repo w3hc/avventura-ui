@@ -72,9 +72,9 @@ export default function Home() {
       }
     } else {
       toast({
-        title: 'Error',
-        description: 'wooooops',
-        status: 'error',
+        title: 'Doucement !',
+        description: "Veuillez d'abord commencer une partie, s'il vous plaît.",
+        status: 'info',
         duration: 9000,
         isClosable: true,
       })
