@@ -28,8 +28,8 @@ export default function Home() {
 
         if (data.success) {
           toast({
-            title: "C'est parti !",
-            description: `Salut à toi, ${name} ! Bonne chance pour cette aventure !`,
+            title: `Salut à toi, ${name} !`,
+            description: 'Bonne chance pour cette aventure !',
             status: 'success',
             duration: 5000,
             isClosable: true,
