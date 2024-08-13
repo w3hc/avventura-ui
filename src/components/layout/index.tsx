@@ -10,14 +10,12 @@ interface Props {
 
 export default function RootLayout({ children }: Props) {
   const router = useRouter()
-  const isHomePage = router.pathname === '/' || router.pathname === '/index'
-  const isEditor = router.pathname === '/editor' || router.pathname === '/editor'
+  const shouldShowHeader = router.pathname === '/' || router.pathname.startsWith('/editor')
 
   return (
     <Web3Modal>
       <Box margin="0 auto" minH="100vh">
-        {isHomePage && <Header />}
-        {isEditor && <Header />}
+        {shouldShowHeader && <Header />}
         <Container maxW="container.lg">{children}</Container>
       </Box>
     </Web3Modal>
