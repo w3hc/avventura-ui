@@ -23,7 +23,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid step data' })
     }
 
-    // Make a request to your NestJS backend
     const response = await fetch(`http://localhost:3000/steps/The%20Jade%20Island/add-step`, {
       method: 'POST',
       headers: {
@@ -37,9 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(errorData.message || 'Failed to add step')
     }
 
-    const data = await response.json()
-
-    res.status(201).json({ success: true, data })
+    res.status(201).json({ success: true })
   } catch (error) {
     console.error('Error adding step:', error)
     res.status(500).json({ error: 'Internal Server Error' })

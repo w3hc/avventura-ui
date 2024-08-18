@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button, Input, Textarea, FormControl, FormLabel, useToast, VStack, HStack, Box, Text } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
+import { FaPlus } from 'react-icons/fa'
 
 interface StoryStep {
   step: number
@@ -22,15 +23,9 @@ export default function Editor() {
   const router = useRouter()
   const storyName = router.query.story as string
 
-  useEffect(() => {
-    if (storyName) {
-      fetchSteps()
-    }
-  }, [storyName])
-
-  const fetchSteps = async () => {
+  const fetchAllSteps = async () => {
     try {
-      const response = await fetch(`/api/fetchSteps?storyName=${storyName}`)
+      const response = await fetch(`/api/fetchAllSteps?storyName=${storyName}`)
       if (response.ok) {
         const data = await response.json()
         setSteps(data)
@@ -52,6 +47,18 @@ export default function Editor() {
 
   const handleAddStep = async () => {
     try {
+      // Validate input
+      if (!newStep.desc || newStep.options.some((option) => !option) || newStep.paths.some((path) => path === 0)) {
+        toast({
+          title: 'Invalid input',
+          description: 'Please fill in all fields',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        return
+      }
+
       const response = await fetch('/api/addStep', {
         method: 'POST',
         headers: {
@@ -60,20 +67,15 @@ export default function Editor() {
         body: JSON.stringify({ storyName, stepData: newStep }),
       })
 
-      if (response.ok) {
+      const data = await response.json()
+
+      if (data.success) {
         toast({
           title: 'Step added',
           description: 'New step has been added to the story',
           status: 'success',
           duration: 5000,
           isClosable: true,
-        })
-        fetchSteps() // Refresh the steps
-        setNewStep({
-          step: newStep.step + 1,
-          desc: '',
-          options: ['', ''],
-          paths: [0, 0],
         })
       } else {
         throw new Error('Failed to add step')
@@ -82,7 +84,7 @@ export default function Editor() {
       console.error('Error adding step:', error)
       toast({
         title: 'Error',
-        description: 'Failed to add new step',
+        description: error instanceof Error ? error.message : 'Failed to add new step',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -90,29 +92,39 @@ export default function Editor() {
     }
   }
 
+  useEffect(() => {
+    if (storyName) {
+      fetchAllSteps()
+    }
+  }, [storyName, handleAddStep])
+
   return (
     <VStack spacing={8} align="stretch">
-      <HeadingComponent as="h4">Editing {storyName}</HeadingComponent>
+      <HeadingComponent as="h3">Editing {storyName}</HeadingComponent>
 
       <Box>
-        <HeadingComponent as="h5">Existing Steps</HeadingComponent>
         {steps.map((step) => (
-          <Box key={step.step} p={4} borderWidth={1} borderRadius="md" my={2}>
+          <Box key={step.step} p={4} borderWidth={1} borderRadius="lg" my={2}>
             <Text fontWeight="bold">Step {step.step}</Text>
             <Text>{step.desc}</Text>
+            <br />
             <Text fontWeight="bold">Options:</Text>
             <VStack align="stretch">
               {step.options.map((option, index) => (
                 <Text key={index}>{option}</Text>
               ))}
             </VStack>
-            <Text fontWeight="bold">Paths: {step.paths.join(', ')}</Text>
+            <br />
+            <Text>
+              Paths: <strong>{step.paths.join(', ')}</strong>
+            </Text>
           </Box>
         ))}
       </Box>
 
       <Box>
-        <HeadingComponent as="h5">Add New Step</HeadingComponent>
+        <HeadingComponent as="h3">Add New Step</HeadingComponent>
+        <br />
         <FormControl>
           <FormLabel>Description</FormLabel>
           <Textarea value={newStep.desc} onChange={(e) => setNewStep({ ...newStep, desc: e.target.value })} placeholder="Enter step description" />
@@ -153,11 +165,13 @@ export default function Editor() {
             ))}
           </HStack>
         </FormControl>
-
-        <Button onClick={handleAddStep} colorScheme="green" mt={4}>
+        <br />
+        <Button onClick={handleAddStep} colorScheme="blue" mt={4} rightIcon={<FaPlus />}>
           Add Step
         </Button>
       </Box>
+      <br />
+      <br />
     </VStack>
   )
 }
