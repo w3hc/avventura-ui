@@ -25,7 +25,11 @@ export default function Editor() {
 
   const fetchAllSteps = async () => {
     try {
-      const response = await fetch(`/api/fetchAllSteps?storyName=${storyName}`)
+      if (!storyName) {
+        throw new Error('Story name is not available')
+      }
+      const encodedStoryName = encodeURIComponent(storyName)
+      const response = await fetch(`/api/fetchAllSteps?storyName=${encodedStoryName}`)
       if (response.ok) {
         const data = await response.json()
         setSteps(data)
@@ -59,6 +63,10 @@ export default function Editor() {
         return
       }
 
+      if (!storyName) {
+        throw new Error('Story name is not available')
+      }
+
       const response = await fetch('/api/addStep', {
         method: 'POST',
         headers: {
@@ -77,6 +85,8 @@ export default function Editor() {
           duration: 5000,
           isClosable: true,
         })
+        // Refresh the steps after adding a new one
+        await fetchAllSteps()
       } else {
         throw new Error('Failed to add step')
       }

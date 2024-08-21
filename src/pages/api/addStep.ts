@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { API_BASE_URL } from '../../utils/api'
 
 interface StepData {
   step: number
@@ -23,7 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid step data' })
     }
 
-    const response = await fetch(`http://localhost:3000/steps/The%20Jade%20Island/add-step`, {
+    const encodedStoryName = encodeURIComponent(storyName)
+    const response = await fetch(`${API_BASE_URL}/steps/${encodedStoryName}/add-step`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

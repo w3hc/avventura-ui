@@ -16,7 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/steps/story/The%20Jade%20Island`)
+    const encodedStoryName = encodeURIComponent(storyName)
+    const response = await fetch(`${API_BASE_URL}/steps/story/${encodedStoryName}`)
     if (!response.ok) {
       throw new Error('Failed to fetch story steps')
     }
