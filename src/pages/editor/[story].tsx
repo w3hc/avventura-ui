@@ -17,7 +17,7 @@ export default function Editor() {
     step: 1,
     desc: '',
     options: ['', ''],
-    paths: [0, 0],
+    paths: [1, 1],
   })
   const toast = useToast()
   const router = useRouter()
