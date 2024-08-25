@@ -52,10 +52,10 @@ export default function Editor() {
   const handleAddStep = async () => {
     try {
       // Validate input
-      if (!newStep.desc || newStep.options.some((option) => !option) || newStep.paths.some((path) => path === 0)) {
+      if (!newStep.desc || newStep.options.some((option) => !option) || newStep.paths.some((path) => path === 0 || isNaN(path))) {
         toast({
           title: 'Invalid input',
-          description: 'Please fill in all fields',
+          description: 'Please fill in all fields with valid values',
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -85,7 +85,6 @@ export default function Editor() {
           duration: 5000,
           isClosable: true,
         })
-        // Refresh the steps after adding a new one
         await fetchAllSteps()
       } else {
         throw new Error('Failed to add step')
@@ -136,6 +135,12 @@ export default function Editor() {
         <HeadingComponent as="h3">Add New Step</HeadingComponent>
         <br />
         <FormControl>
+          <FormLabel>Step number</FormLabel>
+          <Input type="number" placeholder="Enter step number" />
+        </FormControl>
+
+        <br />
+        <FormControl>
           <FormLabel>Description</FormLabel>
           <Textarea value={newStep.desc} onChange={(e) => setNewStep({ ...newStep, desc: e.target.value })} placeholder="Enter step description" />
         </FormControl>
@@ -164,10 +169,10 @@ export default function Editor() {
               <Input
                 key={index}
                 type="number"
-                value={path}
+                value={path === 0 ? '' : path} // Use empty string when path is 0
                 onChange={(e) => {
                   const newPaths = [...newStep.paths]
-                  newPaths[index] = parseInt(e.target.value)
+                  newPaths[index] = e.target.value === '' ? 0 : parseInt(e.target.value, 10)
                   setNewStep({ ...newStep, paths: newPaths })
                 }}
                 placeholder={`Path ${index + 1}`}

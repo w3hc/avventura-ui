@@ -49,10 +49,11 @@ function validateStepData(data: any): data is StepData {
   return (
     typeof data === 'object' &&
     typeof data.step === 'number' &&
+    data.step > 0 &&
     typeof data.desc === 'string' &&
     Array.isArray(data.options) &&
     data.options.every((option: any) => typeof option === 'string') &&
     Array.isArray(data.paths) &&
-    data.paths.every((path: any) => typeof path === 'number')
+    data.paths.every((path: any) => typeof path === 'number' && path > 0)
   )
 }
