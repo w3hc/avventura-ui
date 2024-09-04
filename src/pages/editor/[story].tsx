@@ -187,10 +187,10 @@ export default function Editor() {
       </Box>
 
       <Box>
-        <HeadingComponent as="h3">Add or Edit Step</HeadingComponent>
+        <HeadingComponent as="h3">Edit Step</HeadingComponent>
         <br />
         <FormControl>
-          <FormLabel>Step number</FormLabel>
+          <FormLabel>Step</FormLabel>
           <Input
             type="number"
             value={newStep.step}
