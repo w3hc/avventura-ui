@@ -69,6 +69,8 @@ export default function Play() {
   const router = useRouter()
   const toast = useToast()
 
+  const { storyName, id } = router.query
+
   const [currentStep, setCurrentStep] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [story, setStory] = useState<StoryCard | null>(null)
@@ -77,7 +79,7 @@ export default function Play() {
 
   const fetchInitialStep = async (sessionToken: string) => {
     try {
-      const response = await fetch(`/api/getCurrentStep?sessionToken=${sessionToken}`)
+      const response = await fetch(`/api/getCurrentStep?sessionToken=${sessionToken}&storyName=${storyName}`)
       if (!response.ok) {
         throw new Error('Failed to fetch current step')
       }
@@ -103,7 +105,7 @@ export default function Play() {
     setIsLoading(true)
     setShowOptions(false)
     try {
-      const response = await fetch(`/api/fetchCard?id=${step}`)
+      const response = await fetch(`/api/fetchCard?id=${step}&storyName=${storyName}`)
       if (!response.ok) {
         throw new Error('Failed to fetch story card')
       }
@@ -129,12 +131,12 @@ export default function Play() {
     setIsLoading(true)
     setShowOptions(false)
     try {
-      const gameId = router.query.id
+      const gameId = id
       if (!sessionToken) {
         throw new Error('No session token found')
       }
 
-      const updateResponse = await fetch(`/api/updateGameStep?token=${sessionToken}&gameId=${gameId}`, {
+      const updateResponse = await fetch(`/api/updateGameStep?token=${sessionToken}&gameId=${id}&storyName=${storyName}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

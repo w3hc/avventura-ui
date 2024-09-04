@@ -33,7 +33,6 @@ export default function Editor() {
       if (response.ok) {
         const data = await response.json()
         setSteps(data)
-        setNewStep((prev) => ({ ...prev, step: data.length + 1 }))
       } else {
         throw new Error('Failed to fetch steps')
       }
@@ -49,10 +48,58 @@ export default function Editor() {
     }
   }
 
+  const suggestNewPaths = (existingSteps: StoryStep[], currentStep: number): number[] => {
+    const existingStepNumbers = existingSteps.map((step) => step.step)
+    let suggestedPath1 = currentStep + 1
+    let suggestedPath2 = suggestedPath1 + 1
+
+    while (existingStepNumbers.includes(suggestedPath1)) {
+      suggestedPath1++
+    }
+    while (existingStepNumbers.includes(suggestedPath2) || suggestedPath2 === suggestedPath1) {
+      suggestedPath2++
+    }
+
+    return [suggestedPath1, suggestedPath2]
+  }
+
+  const fetchStepData = (stepNumber: number) => {
+    const existingStep = steps.find((step) => step.step === stepNumber)
+    if (existingStep) {
+      const suggestedPaths = suggestNewPaths(steps, stepNumber)
+      setNewStep({
+        ...existingStep,
+        paths: suggestedPaths,
+      })
+      // toast({
+      //   title: 'Existing Step Loaded',
+      //   description: `Suggested new paths: ${suggestedPaths.join(', ')}`,
+      //   status: 'info',
+      //   duration: 5000,
+      //   isClosable: true,
+      // })
+    } else {
+      const suggestedPaths = suggestNewPaths(steps, stepNumber)
+      setNewStep({
+        step: stepNumber,
+        desc: '',
+        options: ['', ''],
+        paths: suggestedPaths,
+      })
+      // toast({
+      //   title: 'New Step',
+      //   description: `Suggested paths: ${suggestedPaths.join(', ')}`,
+      //   status: 'info',
+      //   duration: 5000,
+      //   isClosable: true,
+      // })
+    }
+  }
+
   const handleAddStep = async () => {
     try {
       // Validate input
-      if (!newStep.desc || newStep.options.some((option) => !option) || newStep.paths.some((path) => path === 0 || isNaN(path))) {
+      if (!newStep.step || !newStep.desc || newStep.options.some((option) => !option) || newStep.paths.some((path) => path === 0 || isNaN(path))) {
         toast({
           title: 'Invalid input',
           description: 'Please fill in all fields with valid values',
@@ -79,21 +126,29 @@ export default function Editor() {
 
       if (data.success) {
         toast({
-          title: 'Step added',
-          description: 'New step has been added to the story',
+          title: 'Step updated',
+          description: 'Step has been added or updated in the story',
           status: 'success',
           duration: 5000,
           isClosable: true,
         })
         await fetchAllSteps()
+        const nextStepNumber = Math.max(...steps.map((step) => step.step), newStep.step) + 1
+        const suggestedPaths = suggestNewPaths(steps, nextStepNumber)
+        setNewStep({
+          step: nextStepNumber,
+          desc: '',
+          options: ['', ''],
+          paths: suggestedPaths,
+        })
       } else {
-        throw new Error('Failed to add step')
+        throw new Error('Failed to add/update step')
       }
     } catch (error) {
-      console.error('Error adding step:', error)
+      console.error('Error adding/updating step:', error)
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to add new step',
+        description: error instanceof Error ? error.message : 'Failed to add/update step',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -105,7 +160,7 @@ export default function Editor() {
     if (storyName) {
       fetchAllSteps()
     }
-  }, [storyName, handleAddStep])
+  }, [storyName])
 
   return (
     <VStack spacing={8} align="stretch">
@@ -132,11 +187,19 @@ export default function Editor() {
       </Box>
 
       <Box>
-        <HeadingComponent as="h3">Add New Step</HeadingComponent>
+        <HeadingComponent as="h3">Add or Edit Step</HeadingComponent>
         <br />
         <FormControl>
           <FormLabel>Step number</FormLabel>
-          <Input type="number" placeholder="Enter step number" />
+          <Input
+            type="number"
+            value={newStep.step}
+            onChange={(e) => {
+              const stepNumber = parseInt(e.target.value, 10)
+              fetchStepData(stepNumber)
+            }}
+            placeholder="Enter step number"
+          />
         </FormControl>
 
         <br />
@@ -169,10 +232,10 @@ export default function Editor() {
               <Input
                 key={index}
                 type="number"
-                value={path === 0 ? '' : path} // Use empty string when path is 0
+                value={path}
                 onChange={(e) => {
                   const newPaths = [...newStep.paths]
-                  newPaths[index] = e.target.value === '' ? 0 : parseInt(e.target.value, 10)
+                  newPaths[index] = parseInt(e.target.value, 10) || 0
                   setNewStep({ ...newStep, paths: newPaths })
                 }}
                 placeholder={`Path ${index + 1}`}
@@ -182,7 +245,7 @@ export default function Editor() {
         </FormControl>
         <br />
         <Button onClick={handleAddStep} colorScheme="blue" mt={4} rightIcon={<FaPlus />}>
-          Add Step
+          Add/Update Step
         </Button>
       </Box>
       <br />
