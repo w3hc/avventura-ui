@@ -39,7 +39,7 @@ export default function Home() {
             duration: 5000,
             isClosable: true,
           })
-          router.push(`/play/${data.game.id}`)
+          router.push(`/the-jade-island/${data.game.id}`)
         } else {
           throw new Error(data.error || 'Échec du démarrage de la partie')
         }
@@ -57,7 +57,6 @@ export default function Home() {
   }
 
   const resume = async (e: React.FormEvent) => {
-    // get game ID from session token in local storage
     console.log('localStorage.getItem:', localStorage.getItem('avventuraSessionToken'))
 
     if (localStorage.getItem('avventuraSessionToken')) {
@@ -66,7 +65,7 @@ export default function Home() {
 
       if (data.gameID) {
         console.log('Game ID:', data.gameID)
-        router.push(`/play/${data.gameID}`)
+        router.push(`/the-jade-island/${data.gameID}`)
       } else {
         console.error('Game ID not found in response')
       }
