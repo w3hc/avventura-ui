@@ -66,34 +66,25 @@ export default function Editor() {
   const fetchStepData = (stepNumber: number) => {
     const existingStep = steps.find((step) => step.step === stepNumber)
     if (existingStep) {
-      const suggestedPaths = suggestNewPaths(steps, stepNumber)
       setNewStep({
         ...existingStep,
-        paths: suggestedPaths,
+        paths: suggestNewPaths(steps, stepNumber),
       })
-      // toast({
-      //   title: 'Existing Step Loaded',
-      //   description: `Suggested new paths: ${suggestedPaths.join(', ')}`,
-      //   status: 'info',
-      //   duration: 5000,
-      //   isClosable: true,
-      // })
     } else {
-      const suggestedPaths = suggestNewPaths(steps, stepNumber)
       setNewStep({
         step: stepNumber,
         desc: '',
         options: ['', ''],
-        paths: suggestedPaths,
+        paths: suggestNewPaths(steps, stepNumber),
       })
-      // toast({
-      //   title: 'New Step',
-      //   description: `Suggested paths: ${suggestedPaths.join(', ')}`,
-      //   status: 'info',
-      //   duration: 5000,
-      //   isClosable: true,
-      // })
     }
+  }
+
+  const handleCardClick = (step: StoryStep) => {
+    setNewStep({
+      ...step,
+      paths: suggestNewPaths(steps, step.step),
+    })
   }
 
   const handleAddStep = async () => {
@@ -168,7 +159,15 @@ export default function Editor() {
 
       <Box>
         {steps.map((step) => (
-          <Box key={step.step} p={4} borderWidth={1} borderRadius="lg" my={2}>
+          <Box
+            key={step.step}
+            p={4}
+            borderWidth={1}
+            borderRadius="lg"
+            my={2}
+            onClick={() => handleCardClick(step)}
+            cursor="pointer"
+            _hover={{ borderColor: 'blue.500', boxShadow: 'md' }}>
             <Text fontWeight="bold">Step {step.step}</Text>
             <Text>{step.desc}</Text>
             <br />
