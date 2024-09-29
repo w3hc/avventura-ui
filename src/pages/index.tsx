@@ -39,7 +39,7 @@ export default function Home() {
             duration: 5000,
             isClosable: true,
           })
-          router.push(`/the-jade-island/${data.game.id}`)
+          router.push(`/optimistic-life/${data.game.id}`)
         } else {
           throw new Error(data.error || 'Échec du démarrage de la partie')
         }
@@ -65,7 +65,7 @@ export default function Home() {
 
       if (data.gameID) {
         console.log('Game ID:', data.gameID)
-        router.push(`/the-jade-island/${data.gameID}`)
+        router.push(`/optimistic-life/${data.gameID}`)
       } else {
         console.error('Game ID not found in response')
       }

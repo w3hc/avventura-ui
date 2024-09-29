@@ -25,6 +25,6 @@ export default function Play() {
   const toast = useToast()
 
   useEffect(() => {
-    router.push('/the-jade-island/1')
+    router.push('/optimistic-life/1')
   }, [])
 }
