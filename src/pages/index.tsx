@@ -6,12 +6,15 @@ import { HeadingComponent } from '../components/layout/HeadingComponent'
 
 export default function Home() {
   const [name, setName] = useState('')
+  const [isStartLoading, setIsStartLoading] = useState(false)
+  const [isResumeLoading, setIsResumeLoading] = useState(false)
   const toast = useToast()
 
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsStartLoading(true)
 
     if (name.trim()) {
       try {
@@ -52,22 +55,47 @@ export default function Home() {
           duration: 5000,
           isClosable: true,
         })
+      } finally {
+        setIsStartLoading(false)
       }
+    } else {
+      setIsStartLoading(false)
     }
   }
 
   const resume = async (e: React.FormEvent) => {
+    setIsResumeLoading(true)
     console.log('localStorage.getItem:', localStorage.getItem('avventuraSessionToken'))
 
     if (localStorage.getItem('avventuraSessionToken')) {
-      const response = await fetch(`/api/getGameID?sessionToken=${localStorage.getItem('avventuraSessionToken')}`)
-      const data = await response.json()
+      try {
+        const response = await fetch(`/api/getGameID?sessionToken=${localStorage.getItem('avventuraSessionToken')}`)
+        const data = await response.json()
 
-      if (data.gameID) {
-        console.log('Game ID:', data.gameID)
-        router.push(`/optimistic-life/${data.gameID}`)
-      } else {
-        console.error('Game ID not found in response')
+        if (data.gameID) {
+          console.log('Game ID:', data.gameID)
+          router.push(`/optimistic-life/${data.gameID}`)
+        } else {
+          console.error('Game ID not found in response')
+          toast({
+            title: 'Erreur',
+            description: "Impossible de reprendre la partie. L'ID de jeu n'a pas été trouvé.",
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          })
+        }
+      } catch (error) {
+        console.error('Error resuming game:', error)
+        toast({
+          title: 'Erreur',
+          description: 'Une erreur est survenue lors de la reprise de la partie.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+      } finally {
+        setIsResumeLoading(false)
       }
     } else {
       toast({
@@ -77,8 +105,10 @@ export default function Home() {
         duration: 9000,
         isClosable: true,
       })
+      setIsResumeLoading(false)
     }
   }
+
   return (
     <>
       <HeadingComponent as="h4">Commencer une nouvelle partie</HeadingComponent>
@@ -86,13 +116,13 @@ export default function Home() {
       <FormControl as="form" onSubmit={handleSubmit}>
         <FormLabel>Quel est votre prénom ou pseudo, s&apos;il vous plaît ?</FormLabel>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Francis" />
-        <Button type="submit" colorScheme="green" mt={5} mb={5}>
+        <Button type="submit" colorScheme="green" mt={5} mb={5} isLoading={isStartLoading} loadingText="Démarrage..." spinnerPlacement="end">
           C&apos;est parti !
         </Button>
       </FormControl>
       <br />
       <HeadingComponent as="h4">Reprendre votre partie</HeadingComponent>
-      <Button onClick={resume} colorScheme="blue" mt={5} mb={5}>
+      <Button onClick={resume} colorScheme="blue" mt={5} mb={5} isLoading={isResumeLoading} loadingText="Chargement..." spinnerPlacement="end">
         J&apos;y retourne !
       </Button>
     </>
