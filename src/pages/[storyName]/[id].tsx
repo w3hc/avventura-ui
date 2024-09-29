@@ -154,8 +154,8 @@ export default function Play() {
     } catch (error) {
       console.error('Error advancing to next step:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to advance to the next step',
+        title: 'Woops',
+        description: "An error just occured and we're sorry about that. Please try again.",
         status: 'error',
         duration: 9000,
         isClosable: true,

@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log('user name:', userName)
 
   const body = {
-    story: 'The Jade Island',
+    story: 'Optimistic Life',
     currentStep: 1,
     players: {
       totalNumber: 1,
