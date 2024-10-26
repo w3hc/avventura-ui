@@ -1,54 +1,30 @@
 import * as React from 'react'
-import { Button, Input, Text, FormControl, FormLabel, useToast, VStack, Select, Box, Spinner } from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
+import { Button, Input, Text, FormControl, FormLabel, useToast, VStack, Select, Box } from '@chakra-ui/react'
+import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../components/layout/HeadingComponent'
 
-interface Story {
-  name: string
-  slug: string
-  description: string
-}
+const STORIES = [
+  {
+    name: 'In the Desert',
+    slug: 'in-the-desert',
+    description: 'Survive a perilous journey through the desert.',
+  },
+  {
+    name: 'Optimistic Life',
+    slug: 'optimistic-life',
+    description: 'Live an adventure in a smart contract world filled with optimism.',
+  },
+]
 
 export default function Home() {
-  const [name, setName] = useState('')
-  const [walletAddress, setWalletAddress] = useState('')
-  const [selectedStory, setSelectedStory] = useState('')
-  const [stories, setStories] = useState<Story[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [name, setName] = useState('Francis')
+  const [walletAddress, setWalletAddress] = useState('0xD8a394e7d7894bDF2C57139fF17e5CBAa29Dd977')
+  const [selectedStory, setSelectedStory] = useState(STORIES[0].slug)
   const [isStartLoading, setIsStartLoading] = useState(false)
   const [isResumeLoading, setIsResumeLoading] = useState(false)
   const toast = useToast()
   const router = useRouter()
-
-  useEffect(() => {
-    fetchStories()
-  }, [])
-
-  const fetchStories = async () => {
-    try {
-      const response = await fetch('/api/getStories')
-      if (response.ok) {
-        const data = await response.json()
-        setStories(data)
-        if (data.length > 0) {
-          setSelectedStory(data[0].slug)
-        }
-      } else {
-        throw new Error('Failed to fetch stories')
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load available stories',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const validateWalletAddress = (address: string) => {
     return /^0x[a-fA-F0-9]{40}$/.test(address)
@@ -179,14 +155,6 @@ export default function Home() {
     setIsResumeLoading(false)
   }
 
-  if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <Spinner size="xl" />
-      </Box>
-    )
-  }
-
   return (
     <VStack spacing={6} align="stretch">
       <HeadingComponent as="h4">Start a new game</HeadingComponent>
@@ -194,7 +162,7 @@ export default function Home() {
       <FormControl as="form" onSubmit={handleSubmit}>
         <FormLabel>Select a story</FormLabel>
         <Select value={selectedStory} onChange={(e) => setSelectedStory(e.target.value)} mb={4}>
-          {stories.map((story) => (
+          {STORIES.map((story) => (
             <option key={story.slug} value={story.slug}>
               {story.name}
             </option>
@@ -203,7 +171,7 @@ export default function Home() {
 
         {selectedStory && (
           <Text mb={4} color="gray.500">
-            {stories.find((s) => s.slug === selectedStory)?.description}
+            {STORIES.find((s) => s.slug === selectedStory)?.description}
           </Text>
         )}
 

@@ -12,20 +12,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   const { nextStep } = req.body
-  const { token, gameId } = req.query
+  const { token, gameId, storyName } = req.query
 
   if (!nextStep || typeof nextStep !== 'number') {
     return res.status(400).json({ success: false, error: 'Invalid nextStep' })
   }
 
-  if (!token || Array.isArray(token) || !gameId || Array.isArray(gameId)) {
-    return res.status(400).json({ success: false, error: 'Invalid token or gameId' })
+  if (!token || Array.isArray(token) || !gameId || Array.isArray(gameId) || !storyName || Array.isArray(storyName)) {
+    return res.status(400).json({ success: false, error: 'Invalid token, gameId or storyName' })
   }
 
-  console.log('next step:', nextStep)
-
   try {
-    const updateResponse = await fetch(`${API_BASE_URL}/games/${gameId}/next-step?token=${token}`, {
+    const updateResponse = await fetch(`${API_BASE_URL}/games/${gameId}/next-step?token=${token}&storyName=${storyName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
