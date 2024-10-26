@@ -25,6 +25,6 @@ export default function Play() {
   const toast = useToast()
 
   useEffect(() => {
-    router.push('/optimistic-life/1')
+    router.push('/')
   }, [])
 }

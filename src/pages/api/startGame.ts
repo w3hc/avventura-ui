@@ -12,6 +12,7 @@ type NestJsApiResponse = {
       age: number
       force: number
       intelligence: number
+      walletAddress: string
     }>
   }
   token: string
@@ -22,16 +23,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
-  const { userName } = req.body
+  const { userName, walletAddress, story } = req.body
 
   if (!userName || typeof userName !== 'string') {
     return res.status(400).json({ success: false, error: 'Invalid user name' })
   }
 
-  console.log('user name:', userName)
+  if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+    return res.status(400).json({ success: false, error: 'Invalid wallet address' })
+  }
+
+  if (!story || typeof story !== 'string') {
+    return res.status(400).json({ success: false, error: 'Invalid story selection' })
+  }
+
+  console.log('Starting game with:', { userName, walletAddress, story })
 
   const body = {
-    story: 'Optimistic Life',
+    story: story,
     currentStep: 1,
     players: {
       totalNumber: 1,
@@ -41,6 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           age: 42,
           force: 42,
           intelligence: 42,
+          walletAddress: walletAddress,
         },
       ],
     },

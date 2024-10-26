@@ -9,17 +9,20 @@ type StoryCard = {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<StoryCard | { error: string }>) {
-  const { id } = req.query
+  const { id, storyName } = req.query
 
-  if (!id || Array.isArray(id)) {
-    return res.status(400).json({ error: 'Invalid id parameter' })
+  if (!id || Array.isArray(id) || !storyName || Array.isArray(storyName)) {
+    return res.status(400).json({ error: 'Invalid id or storyName parameter' })
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/steps/single/${id}`)
+    const response = await fetch(`${API_BASE_URL}/steps/single/${id}?storyName=${encodeURIComponent(storyName)}`)
+
     if (!response.ok) {
-      throw new Error('Failed to fetch story card')
+      const error = await response.json()
+      throw new Error(error.message || 'Failed to fetch story card')
     }
+
     const data: StoryCard = await response.json()
     res.status(200).json(data)
   } catch (error) {
