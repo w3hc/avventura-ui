@@ -26,8 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   try {
     const sessionResponse = await fetch(`${API_BASE_URL}/games/session?token=${sessionToken}`)
 
-    console.log('sessionResponse:', sessionResponse)
-
     if (!sessionResponse.ok) {
       throw new Error('Failed to retrieve session')
     }
