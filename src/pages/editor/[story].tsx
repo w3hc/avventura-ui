@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Input, Textarea, FormControl, FormLabel, useToast, VStack, HStack, Box, Text } from '@chakra-ui/react'
+import { Button, Input, Textarea, FormControl, FormLabel, useToast, VStack, HStack, Box, Text, Divider, useClipboard } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
-import { FaPlus } from 'react-icons/fa'
+import { FaPlus, FaFileImport } from 'react-icons/fa'
+import { FaCopy } from 'react-icons/fa'
 
 interface StoryStep {
   step: number
@@ -19,9 +20,14 @@ export default function Editor() {
     options: ['', ''],
     paths: [1, 1],
   })
+  const [importJson, setImportJson] = useState('')
+  const [isImporting, setIsImporting] = useState(false)
   const toast = useToast()
   const router = useRouter()
   const storyName = router.query.story as string
+
+  const storyJson = JSON.stringify(steps, null, 2)
+  const { onCopy, hasCopied } = useClipboard(storyJson)
 
   const fetchAllSteps = async () => {
     try {
@@ -147,6 +153,103 @@ export default function Editor() {
     }
   }
 
+  const handleCopyToClipboard = () => {
+    onCopy()
+    toast({
+      title: 'Story Copied',
+      description: 'The story has been copied to the clipboard.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
+  }
+
+  const handleImportStory = async () => {
+    if (!importJson.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter the story JSON',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      return
+    }
+
+    setIsImporting(true)
+    try {
+      // Try to parse the JSON first
+      let storyData: StoryStep[]
+      try {
+        // Clean the input JSON
+        const cleanJson = importJson.trim()
+        storyData = JSON.parse(cleanJson)
+      } catch (error) {
+        console.error('JSON parsing error:', error)
+        toast({
+          title: 'Invalid JSON',
+          description: 'Please ensure the story data is valid JSON',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        return
+      }
+
+      // Validate story structure
+      if (!Array.isArray(storyData)) {
+        toast({
+          title: 'Invalid Format',
+          description: 'Story data must be an array of steps',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        return
+      }
+
+      const response = await fetch(`/api/update-story`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          storyName,
+          storyData,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update story')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Story updated successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Clear the input and refresh the display
+      setImportJson('')
+      await fetchAllSteps()
+    } catch (error) {
+      console.error('Error importing story:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to import story',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      })
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
   useEffect(() => {
     if (storyName) {
       fetchAllSteps()
@@ -243,9 +346,35 @@ export default function Editor() {
           </HStack>
         </FormControl>
         <br />
+        <Button onClick={handleCopyToClipboard} leftIcon={<FaCopy />} colorScheme="teal">
+          {hasCopied ? 'Copied!' : 'Copy Story to Clipboard'}
+        </Button>
+        <br />
         <Button onClick={handleAddStep} colorScheme="blue" mt={4} rightIcon={<FaPlus />}>
           Add/Update Step
         </Button>
+      </Box>
+
+      <Divider my={8} />
+
+      <Box>
+        <HeadingComponent as="h3">Import Story</HeadingComponent>
+        <Text color="gray.500" mb={4}>
+          Paste the complete story JSON below to update the entire story structure. This will overwrite the existing story.
+        </Text>
+        <FormControl>
+          <FormLabel>Story JSON</FormLabel>
+          <Textarea
+            value={importJson}
+            onChange={(e) => setImportJson(e.target.value)}
+            placeholder="Paste your story JSON here..."
+            height="200px"
+            mb={4}
+          />
+          <Button onClick={handleImportStory} colorScheme="purple" isLoading={isImporting} loadingText="Importing..." leftIcon={<FaFileImport />}>
+            Import Story
+          </Button>
+        </FormControl>
       </Box>
       <br />
       <br />

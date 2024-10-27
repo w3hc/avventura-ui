@@ -1,5 +1,5 @@
 import React, { ReactNode, useState, useEffect, useCallback } from 'react'
-import { Text, Button, useToast, Box, VStack, Flex } from '@chakra-ui/react'
+import { Text, Button, useToast, Box, VStack, Flex, Link } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
 import { LinkComponent } from '../../components/layout/LinkComponent'
@@ -149,13 +149,39 @@ export default function Play() {
         throw new Error(errorData.error || 'Failed to update game state')
       }
 
+      const responseData = await updateResponse.json()
+      console.log('Response data:', responseData) // Add this log
+
+      // Update game state
       setCurrentStep(choice)
       await fetchCard(choice)
+
+      // Check for transaction info and show toast
+      if (responseData.transaction) {
+        console.log('Transaction data:', responseData.transaction) // Add this log
+        toast({
+          title: 'Check your wallet!',
+          description: (
+            <Box>
+              <Text>{responseData.transaction.message}</Text>
+              <Text mt={2}>
+                Transaction hash:{' '}
+                <Link target={'_blank'} href={`https://basescan.org/tx/${responseData.transaction.txHash}`} isExternal color="blue.500">
+                  {responseData.transaction.txHash.substring(0, 10)}...
+                </Link>
+              </Text>
+            </Box>
+          ),
+          status: 'success',
+          duration: 10000,
+          isClosable: true,
+        })
+      }
     } catch (error) {
       console.error('Error advancing to next step:', error)
       toast({
-        title: 'Woops',
-        description: "An error just occured and we're sorry about that. Please try again.",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An error occurred while updating the game state',
         status: 'error',
         duration: 9000,
         isClosable: true,

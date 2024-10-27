@@ -4,6 +4,11 @@ import { API_BASE_URL } from '../../utils/api'
 type UpdateResponse = {
   success: boolean
   error?: string
+  game?: any
+  transaction?: {
+    message: string
+    txHash: string
+  }
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<UpdateResponse>) {
@@ -36,7 +41,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       throw new Error(errorData.message || 'Failed to update game state')
     }
 
-    res.status(200).json({ success: true })
+    const data = await updateResponse.json()
+    console.log('Response from backend:', data) // Add this log
+
+    res.status(200).json({
+      success: true,
+      game: data.game,
+      transaction: data.transaction, // Make sure we pass the transaction data
+    })
   } catch (error) {
     console.error('Error updating game state:', error)
     res.status(500).json({ success: false, error: 'Failed to update game state' })
