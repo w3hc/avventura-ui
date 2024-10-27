@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Input, Textarea, FormControl, FormLabel, useToast, VStack, HStack, Box, Text, Divider } from '@chakra-ui/react'
+import { Button, Input, Textarea, FormControl, FormLabel, useToast, VStack, HStack, Box, Text, Divider, useClipboard } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
 import { FaPlus, FaFileImport } from 'react-icons/fa'
+import { FaCopy } from 'react-icons/fa'
 
 interface StoryStep {
   step: number
@@ -24,6 +25,9 @@ export default function Editor() {
   const toast = useToast()
   const router = useRouter()
   const storyName = router.query.story as string
+
+  const storyJson = JSON.stringify(steps, null, 2)
+  const { onCopy, hasCopied } = useClipboard(storyJson)
 
   const fetchAllSteps = async () => {
     try {
@@ -147,6 +151,17 @@ export default function Editor() {
         isClosable: true,
       })
     }
+  }
+
+  const handleCopyToClipboard = () => {
+    onCopy()
+    toast({
+      title: 'Story Copied',
+      description: 'The story has been copied to the clipboard.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
   }
 
   const handleImportStory = async () => {
@@ -330,6 +345,10 @@ export default function Editor() {
             ))}
           </HStack>
         </FormControl>
+        <br />
+        <Button onClick={handleCopyToClipboard} leftIcon={<FaCopy />} colorScheme="teal">
+          {hasCopied ? 'Copied!' : 'Copy Story to Clipboard'}
+        </Button>
         <br />
         <Button onClick={handleAddStep} colorScheme="blue" mt={4} rightIcon={<FaPlus />}>
           Add/Update Step
