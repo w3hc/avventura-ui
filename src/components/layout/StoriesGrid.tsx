@@ -59,6 +59,11 @@ const StoriesGrid: React.FC = () => {
       slug: 'optimistic-life',
       description: 'Live an adventure in a smart contract world filled with optimism.',
     },
+    {
+      name: 'Moussaillon des maths',
+      slug: 'pirate-math',
+      description: 'Relevez les défis mathématiques pour survivre en mer.',
+    },
   ]
 
   const handleStorySelect = (storySlug: string): void => {
