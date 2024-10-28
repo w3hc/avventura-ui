@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { Button, Input, FormControl, FormLabel, useToast, VStack, Flex } from '@chakra-ui/react'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
@@ -11,8 +11,13 @@ export default function StoryStart() {
   const router = useRouter()
   const { storyName } = router.query
 
-  const validateWalletAddress = (address: string) => {
-    return /^0x[a-fA-F0-9]{40}$/.test(address)
+  // Helper function to format story name
+  const formatStoryName = (name: string) => {
+    if (name === 'pirate-math') return 'Moussaillon des maths'
+    return name
+      ?.split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,21 +25,11 @@ export default function StoryStart() {
     setIsStartLoading(true)
 
     if (!name.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please enter your name',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-      setIsStartLoading(false)
-      return
-    }
+      const errorMessage = storyName === 'pirate-math' ? 'Veuillez entrer votre nom' : 'Please enter your name'
 
-    if (!validateWalletAddress(walletAddress)) {
       toast({
         title: 'Error',
-        description: 'Please enter a valid Ethereum wallet address',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -61,9 +56,14 @@ export default function StoryStart() {
       if (data.success) {
         localStorage.setItem('avventuraSessionToken', data.game.sessions[0])
         localStorage.setItem('avventuraStory', storyName as string)
+
+        const successMessage = storyName === 'pirate-math' ? `Bonjour ${name} !` : `Hello ${name}!`
+
+        const descriptionMessage = storyName === 'pirate-math' ? 'Bonne chance dans cette aventure !' : 'Good luck in this adventure!'
+
         toast({
-          title: `Hello ${name}!`,
-          description: 'Good luck in this adventure!',
+          title: successMessage,
+          description: descriptionMessage,
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -74,9 +74,12 @@ export default function StoryStart() {
       }
     } catch (error) {
       console.error('Failed to start game:', error)
+      const errorMessage =
+        storyName === 'pirate-math' ? 'Désolé, une erreur est survenue ! Veuillez réessayer.' : 'Sorry, an error occurred! Please try again.'
+
       toast({
         title: 'Error',
-        description: 'Sorry, an error occurred! Please try again.',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -87,19 +90,30 @@ export default function StoryStart() {
   }
 
   return (
-    <Flex flexDirection="column" height="100vh" padding={4}>
+    <Flex flexDirection="column" height="100vh" padding={4} mt={20}>
       <VStack spacing={6} align="stretch">
-        <HeadingComponent as="h4">Start your adventure</HeadingComponent>
+        <HeadingComponent as="h4" className="mt-10">
+          {formatStoryName(storyName as string)}
+        </HeadingComponent>
 
         <FormControl as="form" onSubmit={handleSubmit}>
-          <FormLabel>What is your first name or nickname?</FormLabel>
+          <FormLabel>{storyName === 'pirate-math' ? 'Quel est votre prénom ou surnom ?' : 'What is your first name or nickname?'}</FormLabel>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Francis" mb={4} />
 
-          <FormLabel>Your Ethereum wallet address</FormLabel>
-          <Input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="0x..." mb={4} />
+          {storyName !== 'pirate-math' && (
+            <>
+              <FormLabel>Your Ethereum wallet address</FormLabel>
+              <Input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="0x..." mb={4} />
+            </>
+          )}
 
-          <Button type="submit" colorScheme="green" isLoading={isStartLoading} loadingText="Starting..." spinnerPlacement="end">
-            Let&apos;s go!
+          <Button
+            type="submit"
+            colorScheme="green"
+            isLoading={isStartLoading}
+            loadingText={storyName === 'pirate-math' ? 'Démarrage...' : 'Starting...'}
+            spinnerPlacement="end">
+            {storyName === 'pirate-math' ? "C'est parti !" : "Let's go!"}
           </Button>
         </FormControl>
       </VStack>

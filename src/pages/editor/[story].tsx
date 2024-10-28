@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Button, Input, Textarea, FormControl, FormLabel, useToast, VStack, HStack, Box, Text, Divider, useClipboard } from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
 import { FaPlus, FaFileImport } from 'react-icons/fa'
 import { FaCopy } from 'react-icons/fa'
+import { LinkComponent } from '../../components/layout/LinkComponent'
 
 interface StoryStep {
   step: number
@@ -25,6 +26,7 @@ export default function Editor() {
   const toast = useToast()
   const router = useRouter()
   const storyName = router.query.story as string
+  const editSectionRef = useRef<HTMLDivElement>(null)
 
   const storyJson = JSON.stringify(steps, null, 2)
   const { onCopy, hasCopied } = useClipboard(storyJson)
@@ -86,11 +88,57 @@ export default function Editor() {
     }
   }
 
+  const smoothScrollToRef = (ref: React.RefObject<HTMLElement>) => {
+    if (!ref.current) return
+
+    const startPosition = window.pageYOffset
+    const targetPosition = ref.current.getBoundingClientRect().top + window.pageYOffset
+    const distance = targetPosition - startPosition
+    const duration = 1000 // Animation duration in milliseconds
+    let start: number | null = null
+
+    const easeOutCubic = (t: number): number => {
+      return 1 - Math.pow(1 - t, 3)
+    }
+
+    const animation = (currentTime: number) => {
+      if (start === null) start = currentTime
+      const timeElapsed = currentTime - start
+      const progress = Math.min(timeElapsed / duration, 1)
+
+      const easedProgress = easeOutCubic(progress)
+
+      window.scrollTo(0, startPosition + distance * easedProgress)
+
+      if (timeElapsed < duration) {
+        requestAnimationFrame(animation)
+      }
+    }
+
+    requestAnimationFrame(animation)
+  }
+
   const handleCardClick = (step: StoryStep) => {
     setNewStep({
       ...step,
       paths: suggestNewPaths(steps, step.step),
     })
+
+    // Use custom smooth scroll
+    smoothScrollToRef(editSectionRef)
+
+    // Add a subtle highlight effect to the edit section
+    if (editSectionRef.current) {
+      editSectionRef.current.style.transition = 'background-color 0.5s ease'
+      editSectionRef.current.style.backgroundColor = 'rgba(66, 153, 225, 0.1)' // Light blue highlight
+
+      // Remove highlight after animation
+      setTimeout(() => {
+        if (editSectionRef.current) {
+          editSectionRef.current.style.backgroundColor = 'transparent'
+        }
+      }, 1500)
+    }
   }
 
   const handleAddStep = async () => {
@@ -258,7 +306,23 @@ export default function Editor() {
 
   return (
     <VStack spacing={8} align="stretch">
-      <HeadingComponent as="h3">Editing {storyName}</HeadingComponent>
+      <Box>
+        <HeadingComponent as="h3">Editing {storyName}</HeadingComponent>
+        <VStack align="start" spacing={2} mt={6} mb={3}>
+          <Text>
+            Story public URL:{' '}
+            <LinkComponent href={`https://avventura.fun/${storyName}`} isExternal>
+              https://avventura.fun/{storyName}
+            </LinkComponent>
+          </Text>
+          <Text>
+            Editor:{' '}
+            <LinkComponent href={`https://avventura.fun/editor/${storyName}`} isExternal>
+              https://avventura.fun/editor/{storyName}
+            </LinkComponent>
+          </Text>
+        </VStack>
+      </Box>
 
       <Box>
         {steps.map((step) => (
@@ -270,7 +334,12 @@ export default function Editor() {
             my={2}
             onClick={() => handleCardClick(step)}
             cursor="pointer"
-            _hover={{ borderColor: 'blue.500', boxShadow: 'md' }}>
+            _hover={{
+              borderColor: 'blue.500',
+              boxShadow: 'md',
+              transform: 'translateY(-2px)',
+            }}
+            transition="all 0.2s">
             <Text fontWeight="bold">Step {step.step}</Text>
             <Text>{step.desc}</Text>
             <br />
@@ -288,7 +357,7 @@ export default function Editor() {
         ))}
       </Box>
 
-      <Box>
+      <Box ref={editSectionRef} transition="background-color 0.5s ease" borderRadius="lg" p={6}>
         <HeadingComponent as="h3">Edit Step</HeadingComponent>
         <br />
         <FormControl>

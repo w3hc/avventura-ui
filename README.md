@@ -2,7 +2,11 @@
 
 Text-based Web3 RPG.
 
-Live demo: [https://avventura.fun](https://avventura.fun)
+- Live demo: [https://avventura.fun](https://avventura.fun)
+- **[Docs](https://github.com/w3hc/avventura-ui/blob/main/DOCS.md)**
+- [Solidity contracts](https://github.com/w3hc/avventura-contracts)
+- [API repo](https://github.com/strat-web3/avventura)
+- [API (swagger UI)](https://avventura.jcloud-ver-jpe.ik-server.com/api)
 
 ## Install
 
