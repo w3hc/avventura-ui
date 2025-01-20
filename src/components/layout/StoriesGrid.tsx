@@ -49,11 +49,11 @@ const StoriesGrid: React.FC = () => {
   const router = useRouter()
 
   const FEATURED_STORIES: Story[] = [
-    {
-      name: 'Devcon',
-      slug: 'devcon',
-      description: 'A whimsical adventure in Devcon 7.',
-    },
+    // {
+    //   name: 'Devcon',
+    //   slug: 'devcon',
+    //   description: 'A whimsical adventure in Devcon 7.',
+    // },
     {
       name: 'In the Desert',
       slug: 'in-the-desert',
