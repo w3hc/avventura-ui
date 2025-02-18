@@ -86,17 +86,66 @@ async function generateStoryWithClaude(
     throw new Error('ANTHROPIC_API_KEY is not configured')
   }
 
-  const completePrompt = `Create a JSON array of story steps for a text-based RPG game about: ${storyPrompt}
+  const completePrompt = `This is a text-based RPG game.
+    The "story" is the decision tree (in JSON format).
+    The generated output should be only a JSON file: no other content AT ALL, no comments or explanations or anything else than the JSON artifact.
+    Make sure there are a total of 5 levels in the story. Write again the whole story. No comments or explanations in the output. 
+    Always use the language used in the prompt.
 
-Rules for the steps:
-1. Each step must have: step (number), desc (string), options (string[]), paths (number[])
-2. Use step numbers starting from ${Math.max(...existingSteps.map((s) => s.step), initialStep.step) + 1}
-3. Regular steps should have 2-3 options, ending steps should have 1 option
-4. Ending steps should have paths: [1] to return to start
-5. Generate ${depth} branches/levels of story
-6. Make sure all path numbers correspond to valid step numbers
+    STRUCTURE:
+    - The term "step" designates a card in the story. Each step has a unique number.
+    - The word "level" designates the layers or tiers in the decision tree.
+    - Steps in the same level are at the same depth in the tree.
+    - make sure that the JSOn content is: []
 
-Output format: JSON array containing only valid steps, no comments or extra text.`
+    OPTIONS & PATHS:
+    - For regular steps: There must be 2 or 3 options
+    - For story endings: There must be exactly 1 option
+    - The "paths" array links to the next possible steps by their numbers
+    - IMPORTANT: Each path number in the "paths" array MUST correspond to an existing step number
+    - If a path number refers to a non-existent step, it MUST be changed to 1 (return to start)
+
+    STORY ENDINGS:
+    - A "story ending" is a terminal node (a step with no further branches)
+    - When a step is a story ending, its paths array must contain exactly [1] to loop back to start
+
+    Example of a regular step:
+    {
+        "step": 2,
+        "desc": "You enter the cave...",
+        "options": [
+            "Go deeper",
+            "Turn back"
+        ],
+        "paths": [
+            3,
+            4
+        ]
+    }
+
+    Example of a story ending:
+    {
+        "step": 5,
+        "desc": "You found the treasure!",
+        "options": [
+            "You have won! Congrats!"
+        ],
+        "paths": [
+            1
+        ]
+    }
+    
+    This is the existing story so far: 
+
+    ${existingSteps.map((step) => step.desc).join('\n\n')}
+
+    IMPORTANT: Extend the sory (${depth} levels) starting from step ${initialStep.step}. Don't forget to edit ${initialStep.step} too. 
+
+    This new part of the story must nicely include this : 
+
+    ${storyPrompt}
+
+    `
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
