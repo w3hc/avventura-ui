@@ -168,7 +168,7 @@ export default function Editor() {
           prompt: storyPrompt,
           depth: depth, // Add depth to the request
           storyName,
-          step: newStep.step,
+          selectedStep: newStep.step,
         }),
       })
 

@@ -44,7 +44,7 @@ async function addGeneratedSteps(storyName: string, steps: GeneratedStep[]): Pro
   // Process steps sequentially
   for (const step of steps) {
     // Skip invalid steps
-    if (!step.desc || !step.options || !step.paths) {
+    if (!step.desc || !step.options || !step.paths || step.step === 0) {
       console.log(`Skipping invalid step ${step.step}:`, step)
       continue
     }
@@ -122,7 +122,7 @@ Output format: JSON array containing only valid steps, no comments or extra text
 
   console.log('Claude API response status:', response.status)
   const responseText = await response.text()
-  console.log('Claude API raw response:', responseText)
+  // console.log('Claude API raw response:', responseText)
 
   if (!response.ok) {
     throw new Error(`Failed to generate story with Claude: ${responseText}`)
@@ -170,11 +170,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { prompt, storyName, depth = 5, step } = req.body
-    console.log('Received request:', { prompt, storyName, depth, step })
+    const { prompt, storyName, depth = 5, selectedStep } = req.body
+    console.log('Received request:', { prompt, storyName, depth, selectedStep })
 
-    if (!prompt || !storyName || !step) {
-      return res.status(400).json({ error: 'Prompt, story name, and step are required' })
+    if (!prompt || !storyName || !selectedStep) {
+      return res.status(400).json({ error: 'Prompt, story name, and selectedStep are required' })
     }
 
     // Validate depth
@@ -188,7 +188,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Fetched existing steps:', existingSteps)
 
     // Generate story using Claude
-    const generatedSteps = await generateStoryWithClaude(step, existingSteps, prompt, parsedDepth)
+    const generatedSteps = await generateStoryWithClaude(selectedStep, existingSteps, prompt, parsedDepth)
 
     // Add generated steps one by one
     const result = await addGeneratedSteps(storyName, generatedSteps)
