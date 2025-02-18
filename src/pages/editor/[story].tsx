@@ -19,6 +19,7 @@ import { HeadingComponent } from '../../components/layout/HeadingComponent'
 import { LinkComponent } from '../../components/layout/LinkComponent'
 import { FaPlus, FaFileImport, FaCopy } from 'react-icons/fa'
 import { AddIcon, MinusIcon } from '@chakra-ui/icons'
+import { NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper } from '@chakra-ui/react'
 
 interface StoryStep {
   step: number
@@ -40,6 +41,8 @@ export default function Editor() {
   })
   const [importJson, setImportJson] = useState('')
   const [isImporting, setIsImporting] = useState(false)
+  const [depth, setDepth] = useState<number>(5)
+
   const toast = useToast()
   const router = useRouter()
   const storyName = router.query.story as string
@@ -107,7 +110,65 @@ export default function Editor() {
         },
         body: JSON.stringify({
           prompt: storyPrompt,
+          depth: depth, // Add depth to the request
           storyName,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate story')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Story generated and updated successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Refresh the steps display
+      await fetchAllSteps()
+    } catch (error) {
+      console.error('Error generating story:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to generate story',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleGenerateStoryFromStep = async () => {
+    if (!storyPrompt.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a story prompt',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      return
+    }
+
+    setIsGenerating(true)
+    try {
+      const response = await fetch('/api/generateStoryFromStep', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: storyPrompt,
+          depth: depth, // Add depth to the request
+          storyName,
+          step: newStep.step,
         }),
       })
 
@@ -409,31 +470,34 @@ export default function Editor() {
           )}
         </VStack>
 
-        <Box mt={8} p={6} borderWidth={1} borderRadius="lg">
-          <HeadingComponent as="h3">Auto-edit Story</HeadingComponent>
-          <Text color="gray.500" mb={4}>
-            Enter a prompt to automatically generate a new story. This will replace the current story.
-          </Text>
+        <VStack spacing={4} align="stretch" mt={8}>
+          <HeadingComponent as="h4">Auto-edit Story</HeadingComponent>
+
           <FormControl>
-            <FormLabel>What&apos;s on your mind?</FormLabel>
+            <FormLabel>What should this story be about? Unleash your imagination! You can use any language.</FormLabel>
             <Textarea
               value={storyPrompt}
               onChange={(e) => setStoryPrompt(e.target.value)}
-              placeholder="Enter a description of the story you want to generate..."
-              mb={4}
+              placeholder="The player is a young journalist in New York in 1920."
+              rows={4}
             />
-            <Button
-              onClick={handleGenerateStory}
-              colorScheme="purple"
-              isLoading={isGenerating}
-              loadingText="Generating..."
-              spinnerPlacement="end"
-              leftIcon={isGenerating ? <Spinner size="sm" /> : undefined}>
-              Auto-edit
-            </Button>
           </FormControl>
-        </Box>
 
+          <FormControl>
+            <FormLabel>Depth</FormLabel>
+            <NumberInput min={2} max={10} value={depth} onChange={(valueString) => setDepth(parseInt(valueString))}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+
+          <Button onClick={handleGenerateStory} colorScheme="blue" isLoading={isGenerating} loadingText="Generating...">
+            Generate Story
+          </Button>
+        </VStack>
         <Divider my={8} />
       </Box>
 
@@ -529,12 +593,48 @@ export default function Editor() {
               Add Option
             </Button>
           )}
+          <Button
+            colorScheme="purple"
+            mt={4}
+            ml={2}
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleAddStep()
+            }}
+            isLoading={isGenerating}
+            loadingText="Generating">
+            Auto-edit from this step
+          </Button>
         </FormControl>
+        <Box p={4} borderWidth={1} borderRadius="lg" mt={4} borderColor={'purple'}>
+          <FormControl>
+            <FormLabel>Where should the story go from here?</FormLabel>
+            <Textarea
+              value={storyPrompt}
+              onChange={(e) => setStoryPrompt(e.target.value)}
+              placeholder="Add this and that part of the story..."
+              rows={4}
+            />
+          </FormControl>
+
+          <FormControl mt={4}>
+            <FormLabel>Depth</FormLabel>
+            <NumberInput min={2} max={10} value={depth} onChange={(valueString) => setDepth(parseInt(valueString))}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+
+          <Button onClick={handleGenerateStoryFromStep} colorScheme="blue" isLoading={isGenerating} loadingText="Generating..." mt={3}>
+            Generate Story
+          </Button>
+        </Box>
         <br />
-        <Button onClick={handleCopyToClipboard} leftIcon={<FaCopy />} colorScheme="teal">
-          {hasCopied ? 'Copied!' : 'Copy Story to Clipboard'}
-        </Button>
-        <br />
+
         <Button onClick={handleAddStep} colorScheme="blue" mt={4} rightIcon={<FaPlus />}>
           Add/Update Step
         </Button>
@@ -544,6 +644,13 @@ export default function Editor() {
 
       <Box>
         <HeadingComponent as="h3">Import Story</HeadingComponent>
+        <br />
+
+        <Button onClick={handleCopyToClipboard} leftIcon={<FaCopy />} colorScheme="teal">
+          {hasCopied ? 'Copied!' : 'Copy Story to Clipboard'}
+        </Button>
+        <br />
+        <br />
         <Text color="gray.500" mb={4}>
           Paste the complete story JSON below to update the entire story structure. This will overwrite the existing story.
         </Text>

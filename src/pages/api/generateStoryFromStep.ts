@@ -108,8 +108,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { prompt, storyName, depth = 5 } = req.body // Add depth with default value
-    console.log('Received request:', { prompt, storyName, depth })
+    const { prompt, storyName, depth = 5, step } = req.body // Add depth with default value
+    console.log('Received request:', { prompt, storyName, depth, step })
 
     if (!prompt || !storyName) {
       return res.status(400).json({ error: 'Prompt and story name are required' })
@@ -153,7 +153,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!updateResponse.ok) {
       throw new Error(responseData.message || responseData.error || 'Failed to update story')
     }
-
     return res.status(200).json({ success: true, data: responseData })
   } catch (error) {
     console.error('Error in generateStory API route:', error)
