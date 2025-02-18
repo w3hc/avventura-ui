@@ -1,10 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Button, Input, Textarea, FormControl, FormLabel, useToast, VStack, HStack, Box, Text, Divider, useClipboard } from '@chakra-ui/react'
+import {
+  Button,
+  Input,
+  Textarea,
+  FormControl,
+  FormLabel,
+  useToast,
+  VStack,
+  HStack,
+  Box,
+  Text,
+  Divider,
+  useClipboard,
+  Spinner,
+} from '@chakra-ui/react'
 import { useRouter } from 'next/router'
 import { HeadingComponent } from '../../components/layout/HeadingComponent'
-import { FaPlus, FaFileImport } from 'react-icons/fa'
-import { FaCopy } from 'react-icons/fa'
 import { LinkComponent } from '../../components/layout/LinkComponent'
+import { FaPlus, FaFileImport, FaCopy } from 'react-icons/fa'
+import { AddIcon, MinusIcon } from '@chakra-ui/icons'
+import { NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper } from '@chakra-ui/react'
 
 interface StoryStep {
   step: number
@@ -14,6 +29,9 @@ interface StoryStep {
 }
 
 export default function Editor() {
+  const [baseUrl, setBaseUrl] = useState('')
+  const [storyPrompt, setStoryPrompt] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
   const [steps, setSteps] = useState<StoryStep[]>([])
   const [newStep, setNewStep] = useState<StoryStep>({
     step: 1,
@@ -23,13 +41,28 @@ export default function Editor() {
   })
   const [importJson, setImportJson] = useState('')
   const [isImporting, setIsImporting] = useState(false)
+  const [depth, setDepth] = useState<number>(5)
+
   const toast = useToast()
   const router = useRouter()
   const storyName = router.query.story as string
   const editSectionRef = useRef<HTMLDivElement>(null)
 
-  const storyJson = JSON.stringify(steps, null, 2)
-  const { onCopy, hasCopied } = useClipboard(storyJson)
+  const addOption = () => {
+    if (newStep.options.length < 3) {
+      const newOptions = [...newStep.options, '']
+      const newPaths = [...newStep.paths, 1]
+      setNewStep({ ...newStep, options: newOptions, paths: newPaths })
+    }
+  }
+
+  const removeOption = (indexToRemove: number) => {
+    if (newStep.options.length > 1) {
+      const newOptions = newStep.options.filter((_, index) => index !== indexToRemove)
+      const newPaths = newStep.paths.filter((_, index) => index !== indexToRemove)
+      setNewStep({ ...newStep, options: newOptions, paths: newPaths })
+    }
+  }
 
   const fetchAllSteps = async () => {
     try {
@@ -53,6 +86,119 @@ export default function Editor() {
         duration: 5000,
         isClosable: true,
       })
+    }
+  }
+
+  const handleGenerateStory = async () => {
+    if (!storyPrompt.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a story prompt',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      return
+    }
+
+    setIsGenerating(true)
+    try {
+      const response = await fetch('/api/generateStory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: storyPrompt,
+          depth: depth, // Add depth to the request
+          storyName,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate story')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Story generated and updated successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Refresh the steps display
+      await fetchAllSteps()
+    } catch (error) {
+      console.error('Error generating story:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to generate story',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleGenerateStoryFromStep = async () => {
+    if (!storyPrompt.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a story prompt',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      return
+    }
+
+    setIsGenerating(true)
+    try {
+      const response = await fetch('/api/generateStoryFromStep', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: storyPrompt,
+          depth: depth, // Add depth to the request
+          storyName,
+          selectedStep: newStep.step,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate story')
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Story generated and updated successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Refresh the steps display
+      await fetchAllSteps()
+    } catch (error) {
+      console.error('Error generating story:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to generate story',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      })
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -94,7 +240,7 @@ export default function Editor() {
     const startPosition = window.pageYOffset
     const targetPosition = ref.current.getBoundingClientRect().top + window.pageYOffset
     const distance = targetPosition - startPosition
-    const duration = 1000 // Animation duration in milliseconds
+    const duration = 1000
     let start: number | null = null
 
     const easeOutCubic = (t: number): number => {
@@ -105,9 +251,7 @@ export default function Editor() {
       if (start === null) start = currentTime
       const timeElapsed = currentTime - start
       const progress = Math.min(timeElapsed / duration, 1)
-
       const easedProgress = easeOutCubic(progress)
-
       window.scrollTo(0, startPosition + distance * easedProgress)
 
       if (timeElapsed < duration) {
@@ -124,15 +268,11 @@ export default function Editor() {
       paths: suggestNewPaths(steps, step.step),
     })
 
-    // Use custom smooth scroll
     smoothScrollToRef(editSectionRef)
 
-    // Add a subtle highlight effect to the edit section
     if (editSectionRef.current) {
       editSectionRef.current.style.transition = 'background-color 0.5s ease'
-      editSectionRef.current.style.backgroundColor = 'rgba(66, 153, 225, 0.1)' // Light blue highlight
-
-      // Remove highlight after animation
+      editSectionRef.current.style.backgroundColor = 'rgba(66, 153, 225, 0.1)'
       setTimeout(() => {
         if (editSectionRef.current) {
           editSectionRef.current.style.backgroundColor = 'transparent'
@@ -143,7 +283,6 @@ export default function Editor() {
 
   const handleAddStep = async () => {
     try {
-      // Validate input
       if (!newStep.step || !newStep.desc || newStep.options.some((option) => !option) || newStep.paths.some((path) => path === 0 || isNaN(path))) {
         toast({
           title: 'Invalid input',
@@ -201,6 +340,9 @@ export default function Editor() {
     }
   }
 
+  const storyJson = JSON.stringify(steps, null, 2)
+  const { onCopy, hasCopied } = useClipboard(storyJson)
+
   const handleCopyToClipboard = () => {
     onCopy()
     toast({
@@ -226,10 +368,8 @@ export default function Editor() {
 
     setIsImporting(true)
     try {
-      // Try to parse the JSON first
       let storyData: StoryStep[]
       try {
-        // Clean the input JSON
         const cleanJson = importJson.trim()
         storyData = JSON.parse(cleanJson)
       } catch (error) {
@@ -244,7 +384,6 @@ export default function Editor() {
         return
       }
 
-      // Validate story structure
       if (!Array.isArray(storyData)) {
         toast({
           title: 'Invalid Format',
@@ -281,7 +420,6 @@ export default function Editor() {
         isClosable: true,
       })
 
-      // Clear the input and refresh the display
       setImportJson('')
       await fetchAllSteps()
     } catch (error) {
@@ -302,26 +440,65 @@ export default function Editor() {
     if (storyName) {
       fetchAllSteps()
     }
+    if (typeof window !== 'undefined') {
+      const url = window.location.origin
+      setBaseUrl(url)
+    }
   }, [storyName])
 
   return (
     <VStack spacing={8} align="stretch">
       <Box>
         <HeadingComponent as="h3">Editing {storyName}</HeadingComponent>
+
         <VStack align="start" spacing={2} mt={6} mb={3}>
-          <Text>
-            Story public URL:{' '}
-            <LinkComponent href={`https://avventura.fun/${storyName}`} isExternal>
-              https://avventura.fun/{storyName}
-            </LinkComponent>
-          </Text>
-          <Text>
-            Editor:{' '}
-            <LinkComponent href={`https://avventura.fun/editor/${storyName}`} isExternal>
-              https://avventura.fun/editor/{storyName}
-            </LinkComponent>
-          </Text>
+          {baseUrl && (
+            <>
+              <Text>
+                Story public URL:{' '}
+                <LinkComponent href={`${baseUrl}/${storyName}`} isExternal>
+                  {`${baseUrl}/${storyName}`}
+                </LinkComponent>
+              </Text>
+              <Text>
+                Editor:{' '}
+                <LinkComponent href={`${baseUrl}/editor/${storyName}`} isExternal>
+                  {`${baseUrl}/editor/${storyName}`}
+                </LinkComponent>
+              </Text>
+            </>
+          )}
         </VStack>
+
+        <VStack spacing={4} align="stretch" mt={8}>
+          <HeadingComponent as="h4">Auto-edit Story</HeadingComponent>
+
+          <FormControl>
+            <FormLabel>What should this story be about? Unleash your imagination! You can use any language.</FormLabel>
+            <Textarea
+              value={storyPrompt}
+              onChange={(e) => setStoryPrompt(e.target.value)}
+              placeholder="The player is a young journalist in New York in 1920."
+              rows={4}
+            />
+          </FormControl>
+
+          <FormControl>
+            <FormLabel>Depth</FormLabel>
+            <NumberInput min={2} max={10} value={depth} onChange={(valueString) => setDepth(parseInt(valueString))}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+
+          <Button onClick={handleGenerateStory} colorScheme="blue" isLoading={isGenerating} loadingText="Generating...">
+            Generate Story
+          </Button>
+        </VStack>
+        <Divider my={8} />
       </Box>
 
       <Box>
@@ -380,30 +557,23 @@ export default function Editor() {
         </FormControl>
 
         <FormControl mt={4}>
-          <FormLabel>Options</FormLabel>
+          <FormLabel>Options and Paths</FormLabel>
           {newStep.options.map((option, index) => (
-            <Input
-              key={index}
-              value={option}
-              onChange={(e) => {
-                const newOptions = [...newStep.options]
-                newOptions[index] = e.target.value
-                setNewStep({ ...newStep, options: newOptions })
-              }}
-              placeholder={`Option ${index + 1}`}
-              mt={2}
-            />
-          ))}
-        </FormControl>
-
-        <FormControl mt={4}>
-          <FormLabel>Paths</FormLabel>
-          <HStack>
-            {newStep.paths.map((path, index) => (
+            <HStack key={index} spacing={4} mt={2} align="flex-start">
               <Input
-                key={index}
+                flex="3"
+                value={option}
+                onChange={(e) => {
+                  const newOptions = [...newStep.options]
+                  newOptions[index] = e.target.value
+                  setNewStep({ ...newStep, options: newOptions })
+                }}
+                placeholder={`Option ${index + 1}`}
+              />
+              <Input
+                flex="1"
                 type="number"
-                value={path}
+                value={newStep.paths[index]}
                 onChange={(e) => {
                   const newPaths = [...newStep.paths]
                   newPaths[index] = parseInt(e.target.value, 10) || 0
@@ -411,14 +581,60 @@ export default function Editor() {
                 }}
                 placeholder={`Path ${index + 1}`}
               />
-            ))}
-          </HStack>
+              {newStep.options.length > 1 && (
+                <Button colorScheme="red" size="sm" onClick={() => removeOption(index)} aria-label="Remove option">
+                  <MinusIcon />
+                </Button>
+              )}
+            </HStack>
+          ))}
+          {newStep.options.length < 3 && (
+            <Button leftIcon={<AddIcon />} mt={4} size="sm" onClick={addOption} colorScheme="blue">
+              Add Option
+            </Button>
+          )}
+          <Button
+            colorScheme="purple"
+            mt={4}
+            ml={2}
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleAddStep()
+            }}
+            isLoading={isGenerating}
+            loadingText="Generating">
+            Auto-edit from this step
+          </Button>
         </FormControl>
+        <Box p={4} borderWidth={1} borderRadius="lg" mt={4} borderColor={'purple'}>
+          <FormControl>
+            <FormLabel>Where should the story go from here?</FormLabel>
+            <Textarea
+              value={storyPrompt}
+              onChange={(e) => setStoryPrompt(e.target.value)}
+              placeholder="Add this and that part of the story..."
+              rows={4}
+            />
+          </FormControl>
+
+          <FormControl mt={4}>
+            <FormLabel>Depth</FormLabel>
+            <NumberInput min={2} max={10} value={depth} onChange={(valueString) => setDepth(parseInt(valueString))}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+
+          <Button onClick={handleGenerateStoryFromStep} colorScheme="blue" isLoading={isGenerating} loadingText="Generating..." mt={3}>
+            Generate Story
+          </Button>
+        </Box>
         <br />
-        <Button onClick={handleCopyToClipboard} leftIcon={<FaCopy />} colorScheme="teal">
-          {hasCopied ? 'Copied!' : 'Copy Story to Clipboard'}
-        </Button>
-        <br />
+
         <Button onClick={handleAddStep} colorScheme="blue" mt={4} rightIcon={<FaPlus />}>
           Add/Update Step
         </Button>
@@ -428,6 +644,13 @@ export default function Editor() {
 
       <Box>
         <HeadingComponent as="h3">Import Story</HeadingComponent>
+        <br />
+
+        <Button onClick={handleCopyToClipboard} leftIcon={<FaCopy />} colorScheme="teal">
+          {hasCopied ? 'Copied!' : 'Copy Story to Clipboard'}
+        </Button>
+        <br />
+        <br />
         <Text color="gray.500" mb={4}>
           Paste the complete story JSON below to update the entire story structure. This will overwrite the existing story.
         </Text>

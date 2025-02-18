@@ -114,13 +114,13 @@ export default function Play() {
       setStory(data)
     } catch (error) {
       console.error('Error fetching story card:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch story card',
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-      })
+      // toast({
+      //   title: 'Error',
+      //   description: 'Failed to fetch story card',
+      //   status: 'error',
+      //   duration: 9000,
+      //   isClosable: true,
+      // })
     } finally {
       setIsLoading(false)
     }
@@ -226,7 +226,37 @@ export default function Play() {
   }
 
   if (!story || currentStep === null) {
-    return <div>No story found</div>
+    return (
+      <Flex flexDirection="column" height="100vh" padding={4}>
+        <VStack spacing={4} flex={1} width="100%">
+          <Box width="100%" maxHeight="180px" overflowY="auto" marginBottom={4} marginTop={10}>
+            <HeadingComponent as="h4">
+              <TypingEffect text={"We can't find the story or the current step... Sorry for that!"} onComplete={handleTypingComplete} />
+            </HeadingComponent>
+          </Box>
+          {showOptions && (
+            <VStack spacing={4} width="100%">
+              <Box
+                width="100%"
+                borderRadius="lg"
+                p={4}
+                borderWidth="2px"
+                // onClick={() => nextStep(story.paths[index])}
+                cursor="pointer"
+                _hover={{
+                  borderColor: '#8c1c84',
+                  boxShadow: 'md',
+                }}
+                transition="all 0.2s">
+                <Text fontSize="lg" fontWeight="medium" color={'#45a2f8'} _hover={{ color: '#45a2f8' }}>
+                  Sorry for that!
+                </Text>
+              </Box>
+            </VStack>
+          )}
+        </VStack>
+      </Flex>
+    )
   }
 
   return (
